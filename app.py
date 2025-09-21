@@ -2,8 +2,9 @@ import streamlit as st
 import pickle
 import json
 import numpy as np
+import pandas as pd
 
-# Load model, scaler, feature columns
+# Load model, scaler, feature columns (same as backend)
 with open("Heart_disease_rf_model.pkl", "rb") as f_model:
     model = pickle.load(f_model)
 
@@ -15,7 +16,7 @@ with open("feature_columns.json", "r") as f_feat:
 
 st.title("Heart Disease Prediction")
 
-# Input fields for features
+# User inputs
 age = st.number_input('Age', min_value=0.0, max_value=120.0, value=63.0, format="%.2f")
 sex = st.radio('Sex', options=[0, 1], index=1, format_func=lambda x: 'Female' if x == 0 else 'Male')
 resting_blood_pressure = st.number_input('Resting Blood Pressure', min_value=0.0, max_value=250.0, value=145.0, format="%.2f")
@@ -30,10 +31,11 @@ resting_ecg = st.selectbox('Resting ECG', options=[0, 1, 2])
 st_slope = st.selectbox('Slope of the peak exercise', options=[0, 1, 2])
 thalassemia = st.selectbox('Thalassemia', options=[0, 1, 2, 3])
 
+
 if st.button('Predict'):
     try:
-        # Map input values to dictionary with keys matching feature columns
-        input_data = {
+        # Create input dictionary with raw inputs like FastAPI expects
+        input_dict = {
             "age": age,
             "sex": sex,
             "resting_blood_pressure": resting_blood_pressure,
@@ -49,13 +51,28 @@ if st.button('Predict'):
             "thalassemia": thalassemia
         }
 
-        # Prepare input array in correct column order
-        input_list = [input_data[col] for col in feature_columns]
+        # Convert to DataFrame
+        input_df = pd.DataFrame([input_dict])
 
-        # Scale and predict
-        scaled_input = scaler.transform([input_list])
-        prediction = model.predict(scaled_input)[0]
-        prediction_proba = model.predict_proba(scaled_input)[0][1]
+        # One-hot encode categorical columns as in backend
+        cat_cols = ['chest_pain_type', 'resting_ecg', 'st_slope', 'thalassemia']
+        input_df = pd.get_dummies(input_df, columns=cat_cols)
+
+        # Add missing columns with zeros
+        for col in feature_columns:
+            if col not in input_df.columns:
+                input_df[col] = 0
+
+        # Reorder columns to match model training
+        input_df = input_df[feature_columns]
+
+        # Scale numeric columns (match backend)
+        numeric_cols = ['age', 'resting_blood_pressure', 'cholesterol', 'max_heart_rate', 'st_depression']
+        input_df[numeric_cols] = scaler.transform(input_df[numeric_cols])
+
+        # Prediction
+        prediction = model.predict(input_df)[0]
+        prediction_proba = model.predict_proba(input_df)[0][1]
 
         if prediction == 1:
             st.success("Prediction: Heart Disease Present")
@@ -63,8 +80,10 @@ if st.button('Predict'):
             st.success("Prediction: No Heart Disease")
 
         st.info(f"Prediction Probability: {prediction_proba * 100:.2f}%")
+
     except Exception as e:
         st.error(f"Prediction error: {e}")
+
 
 
 
