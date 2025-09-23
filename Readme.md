@@ -71,7 +71,7 @@ To retrain models or compare new ones, use models.ipynb.
 Deployment config and scripts are directly provided (see Dockerfile and start.sh).
 
 
-
+Used Render.com Cloud service for Deployment
 Deployed on: https://tns-project-2.onrender.com
 
 It will go in sleep mode after 15 minutes of activation, since no traffic
