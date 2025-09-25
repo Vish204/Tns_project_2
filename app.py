@@ -4,6 +4,8 @@ import pickle
 import json
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 # Load model, scaler, feature columns (same as backend)
 with open("Heart_disease_rf_model.pkl", "rb") as f_model:
@@ -62,7 +64,7 @@ thalassemia = st.selectbox('Thalassemia', options=[0, 1, 2, 3], format_func=lamb
 
 if st.button('Predict'):
     try:
-        # Create input dictionary with raw inputs like FastAPI expects
+        # Your existing input processing and prediction code here
         input_dict = {
             "age": age,
             "sex": sex,
@@ -79,26 +81,16 @@ if st.button('Predict'):
             "thalassemia": thalassemia
         }
 
-        # Convert to DataFrame
         input_df = pd.DataFrame([input_dict])
-
-        # One-hot encode categorical columns as in backend
         cat_cols = ['chest_pain_type', 'resting_ecg', 'st_slope', 'thalassemia']
         input_df = pd.get_dummies(input_df, columns=cat_cols)
-
-        # Add missing columns with zeros
         for col in feature_columns:
             if col not in input_df.columns:
                 input_df[col] = 0
-
-        # Reorder columns to match model training
         input_df = input_df[feature_columns]
-
-        # Scale numeric columns (match backend)
         numeric_cols = ['age', 'resting_blood_pressure', 'cholesterol', 'max_heart_rate', 'st_depression']
         input_df[numeric_cols] = scaler.transform(input_df[numeric_cols])
 
-        # Prediction
         prediction = model.predict(input_df)[0]
         prediction_proba = model.predict_proba(input_df)[0][1]
 
@@ -109,8 +101,54 @@ if st.button('Predict'):
 
         st.info(f"Prediction Probability: {prediction_proba * 100:.2f}%")
 
+        # Display Input Summary
+        chest_pain_type_labels = {0: 'Typical Angina', 1: 'Atypical Angina', 2: 'Non-anginal Pain', 3: 'Asymptomatic'}
+        resting_ecg_labels = {0: 'Normal', 1: 'Having ST-T wave abnormality', 2: 'Left ventricular hypertrophy'}
+        slope_labels = {0: 'Upsloping', 1: 'Flat', 2: 'Downsloping'}
+        thalassemia_labels = {0: 'Unknown', 1: 'Normal', 2: 'Fixed Defect', 3: 'Reversible Defect'}
+        st.subheader("Input Summary")
+        
+        input_summary = {
+            "Age": age,
+            "Sex": "Male" if sex == 1 else "Female",
+            "Resting BP": resting_blood_pressure,
+            "Cholesterol": cholesterol,
+            "Fasting Blood Sugar": "Yes" if fasting_blood_sugar == 1 else "No",
+            "Max Heart Rate": max_heart_rate,
+            "Exercise-Induced Angina": "Yes" if exercise_induced_angina == 1 else "No",
+            "ST Depression": st_depression,
+            "Num Major Vessels": num_major_vessels,
+            "Chest Pain Type": chest_pain_type_labels[chest_pain_type],
+            "Resting ECG": resting_ecg_labels[resting_ecg],
+            "Slope": slope_labels[st_slope],
+            "Thalassemia": thalassemia_labels[thalassemia]
+        }
+        st.table(pd.DataFrame(list(input_summary.items()), columns=["Feature", "Value"]))
+
+        # Feature importance visualization (Random Forest example)
+        st.subheader("Top Features Influencing Prediction")
+        importances = model.feature_importances_
+        feature_imp_df = pd.DataFrame({
+            "Feature": feature_columns,
+            "Importance": importances
+        }).sort_values(by="Importance", ascending=False).head(5)
+        fig, ax = plt.subplots()
+        ax.barh(feature_imp_df["Feature"], feature_imp_df["Importance"], color="skyblue")
+        ax.set_xlabel("Importance")
+        ax.set_title("Top 5 Feature Importances")
+        st.pyplot(fig)
+
+        # Load saved model metrics from JSON file
+        with open('model_metrics.json', 'r') as f:
+            metrics = json.load(f)
+
+        # Display model performance metrics
+        st.subheader("Model Performance on Test Data")
+        st.table(pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"]))
+
     except Exception as e:
         st.error(f"Prediction error: {e}")
+
 
 
 
