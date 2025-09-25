@@ -20,46 +20,21 @@ with open("feature_columns.json", "r") as f_feat:
 st.title("Heart Disease Prediction")
 
 
-#column
-#col1, col2 = st.columns(2)
 
-
-# User inputs
-
-# with col1:
-#age = st.number_input('Age', min_value=0.0, max_value=120.0, value=63.0, format="%.2f")
+# User Input fields
 age = st.number_input('Age', min_value=0, max_value=120, value=63, step=1, format="%d")
 sex = st.radio('Sex', options=[0, 1], index=1, format_func=lambda x: 'Female' if x == 0 else 'Male')
-#resting_blood_pressure = st.number_input('Resting Blood Pressure', min_value=0.0, max_value=250.0, value=145.0, format="%.2f")
 resting_blood_pressure = st.number_input('Resting Blood Pressure', min_value=0, max_value=250, value=145, step=1, format="%d")
-#cholesterol = st.number_input('Cholesterol', min_value=0.0, max_value=600.0, value=233.0, format="%.2f")
 cholesterol = st.number_input('Cholesterol', min_value=0, max_value=600, value=233, step=1, format="%d")
-#fasting_blood_sugar = st.radio('Fasting Blood Sugar > 120 mg/dl', options=[0, 1])
 fasting_blood_sugar = st.radio('Fasting Blood Sugar > 120 mg/dl', options=[0, 1], format_func=lambda x: 'No' if x == 0 else 'Yes')
-#max_heart_rate = st.number_input('Max Heart Rate Achieved', min_value=0.0, max_value=250.0, value=150.0, format="%.2f")
 max_heart_rate = st.number_input('Max Heart Rate Achieved',min_value=0, max_value=250, value=150, step=1, format="%d")
-
-# with col2:
-#exercise_induced_angina = st.radio('Exercise Induced Angina', options=[0, 1])
 exercise_induced_angina = st.radio('Exercise Induced Angina', options=[0, 1],
                                    format_func=lambda x: 'No' if x == 0 else 'Yes')
-
 st_depression = st.number_input('ST Depression', min_value=0.0, max_value=10.0, value=2.3, format="%.2f")
-
-#num_major_vessels = st.selectbox('Number of major vessels colored by fluoroscopy', options=[0, 1, 2, 3])
 num_major_vessels = st.selectbox('Number of major vessels colored by fluoroscopy', options=[0, 1, 2, 3], format_func=lambda x: f"{x} vessel{'s' if x != 1 else ''}")
-
-
-#chest_pain_type = st.selectbox('Chest Pain Type', options=[0, 1, 2, 3])
 chest_pain_type = st.selectbox('Chest Pain Type', options=[0, 1, 2, 3],format_func=lambda x: {0: 'Typical Angina', 1: 'Atypical Angina', 2: 'Non-anginal Pain', 3: 'Asymptomatic'}[x])
-
-#resting_ecg = st.selectbox('Resting ECG', options=[0, 1, 2])
 resting_ecg = st.selectbox('Resting ECG', options=[0, 1, 2], format_func=lambda x: {0: 'Normal', 1: 'Having ST-T wave abnormality', 2: 'Showing probable or definite left ventricular hypertrophy'}[x])
-
-#st_slope = st.selectbox('Slope of the peak exercise', options=[0, 1, 2])
 st_slope = st.selectbox('Slope of the peak exercise', options=[0, 1, 2], format_func=lambda x: {0: 'Upsloping', 1: 'Flat', 2: 'Downsloping'}[x])
-
-#thalassemia = st.selectbox('Thalassemia', options=[0, 1, 2, 3])
 thalassemia = st.selectbox('Thalassemia', options=[0, 1, 2, 3], format_func=lambda x: {0: 'Unknown', 1: 'Normal', 2: 'Fixed Defect',3: 'Reversible Defect'}[x])
 
 if st.button('Predict'):
